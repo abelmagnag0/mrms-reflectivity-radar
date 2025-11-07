@@ -71,7 +71,7 @@ function App() {
         <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-2">
           <div className="flex flex-wrap items-center justify-between gap-y-3">
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">MRMS Radar + Telemetry</h1>
+              <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">MRMS Radar</h1>
               <p className="text-sm text-slate-600 dark:text-slate-400">
                 Integrated MRMS mosaic viewer with production usage metrics powered by the logging pipeline.
               </p>

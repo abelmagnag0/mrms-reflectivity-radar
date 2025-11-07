@@ -10,7 +10,22 @@ import { createLogger } from '../utils/logger.js';
 const logger = createLogger('mrmsService', config.logLevel);
 
 const BUCKET = config.mrms.bucket;
-const s3Client = new S3Client({ region: config.mrms.awsRegion });
+
+function createUnsignedS3Client() {
+  const client = new S3Client({ region: config.mrms.awsRegion });
+
+  try {
+    client.middlewareStack.remove('awsAuthMiddleware');
+    return client;
+  } catch (error) {
+    logger.warn('Failed to disable request signing; falling back to default credentials chain', {
+      message: error.message,
+    });
+    return new S3Client({ region: config.mrms.awsRegion });
+  }
+}
+
+const s3Client = createUnsignedS3Client();
 const gunzipAsync = promisify(gunzip);
 
 export async function fetchLatestProductMetadata() {

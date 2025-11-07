@@ -187,6 +187,7 @@ The frontend consumes the radar endpoints to render the Leaflet overlay and the 
   ```
 
 - During startup the backend logs whether the bundle directory was found; ensure the build command runs successfully so `frontend/dist` exists before boot.
+- The backend now accesses the public MRMS bucket without AWS credentials, so no additional secrets are required for Render.
 
 ---
 
