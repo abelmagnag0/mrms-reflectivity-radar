@@ -11,18 +11,20 @@ const logger = createLogger('mrmsService', config.logLevel);
 
 const BUCKET = config.mrms.bucket;
 
-function createUnsignedS3Client() {
-  const client = new S3Client({ region: config.mrms.awsRegion });
+const ANONYMOUS_CREDENTIALS = Object.freeze({ accessKeyId: 'ANONYMOUS', secretAccessKey: 'ANONYMOUS' });
+const noOpSigner = {
+  // Ensures the AWS SDK does not attempt to sign requests for public MRMS buckets.
+  async sign(request) {
+    return request;
+  },
+};
 
-  try {
-    client.middlewareStack.remove('awsAuthMiddleware');
-    return client;
-  } catch (error) {
-    logger.warn('Failed to disable request signing; falling back to default credentials chain', {
-      message: error.message,
-    });
-    return new S3Client({ region: config.mrms.awsRegion });
-  }
+function createUnsignedS3Client() {
+  return new S3Client({
+    region: config.mrms.awsRegion,
+    credentials: async () => ANONYMOUS_CREDENTIALS,
+    signer: () => noOpSigner,
+  });
 }
 
 const s3Client = createUnsignedS3Client();
