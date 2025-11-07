@@ -11,7 +11,10 @@ const logger = createLogger('mrmsService', config.logLevel);
 
 const BUCKET = config.mrms.bucket;
 
-const ANONYMOUS_CREDENTIALS = Object.freeze({ accessKeyId: 'ANONYMOUS', secretAccessKey: 'ANONYMOUS' });
+// Important: return a fresh, extensible credentials object.
+// AWS SDK v3 may add internal metadata (e.g., $source) to credentials.
+// If we return a frozen/sealed object, it will throw "object is not extensible".
+const ANONYMOUS_CREDENTIALS_BASE = { accessKeyId: 'ANONYMOUS', secretAccessKey: 'ANONYMOUS' };
 const noOpSigner = {
   // Ensures the AWS SDK does not attempt to sign requests for public MRMS buckets.
   async sign(request) {
@@ -22,7 +25,8 @@ const noOpSigner = {
 function createUnsignedS3Client() {
   return new S3Client({
     region: config.mrms.awsRegion,
-    credentials: async () => ANONYMOUS_CREDENTIALS,
+    // Return a new object each time to ensure it's extensible for the SDK internals.
+    credentials: async () => ({ ...ANONYMOUS_CREDENTIALS_BASE }),
     signer: () => noOpSigner,
   });
 }

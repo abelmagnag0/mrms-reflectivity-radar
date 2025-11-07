@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+export const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const client = axios.create({
   baseURL: API_BASE,
@@ -66,4 +66,17 @@ function sanitiseParams(params) {
   return Object.fromEntries(
     Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== '')
   );
+}
+
+// Resolve any backend-provided URL (absolute or relative) into a full URL against the API base.
+export function resolveApiUrl(path) {
+  if (!path) return path;
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  const cleaned = sanitisePath(path);
+  // Ensure API_BASE ends without trailing slash and cleaned starts with '/'
+  const base = API_BASE.endsWith('/') ? API_BASE.slice(0, -1) : API_BASE;
+  const suffix = cleaned.startsWith('/') ? cleaned : `/${cleaned}`;
+  return `${base}${suffix}`;
 }

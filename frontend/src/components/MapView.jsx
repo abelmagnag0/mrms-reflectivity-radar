@@ -2,6 +2,7 @@ import 'leaflet/dist/leaflet.css';
 import PropTypes from 'prop-types';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ImageOverlay, MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import { resolveApiUrl } from '../services/api.js';
 
 const valueFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 1,
@@ -143,6 +144,10 @@ function MapView({ radar = null, status, error = null }) {
   );
 
   const hasOverlay = Boolean(metadata?.imageUrl && bounds);
+  const overlayUrl = useMemo(() => {
+    if (!metadata?.imageUrl) return null;
+    return resolveApiUrl(metadata.imageUrl);
+  }, [metadata?.imageUrl]);
 
   const mapRef = useRef(null);
 
@@ -185,10 +190,10 @@ function MapView({ radar = null, status, error = null }) {
         }}
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution={tileAttribution} />
-        {hasOverlay ? (
+        {hasOverlay && overlayUrl ? (
           <ImageOverlay
             key={metadata.timestamp}
-            url={metadata.imageUrl}
+            url={overlayUrl}
             bounds={bounds}
             opacity={0.7}
             interactive
