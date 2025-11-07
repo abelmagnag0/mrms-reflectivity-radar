@@ -171,6 +171,23 @@ The frontend consumes the radar endpoints to render the Leaflet overlay and the 
 4. Hover the map to confirm tooltips update with reflectivity values.
 5. Trigger a few API requests to see admin metrics populate.
 
+## Render Monolith Deployment
+
+- Configure a Render Web Service pointing to the repository root and set the working directory to `backend/`.
+- Build Command (installs backend deps, Python worker deps, and builds the frontend bundle):
+
+  ```bash
+  npm --prefix backend install && pip install -r backend/requirements.txt && npm --prefix frontend install && npm --prefix frontend run build
+  ```
+
+- Start Command (serves API + prebuilt frontend from `frontend/dist`):
+
+  ```bash
+  cd backend && npm start
+  ```
+
+- During startup the backend logs whether the bundle directory was found; ensure the build command runs successfully so `frontend/dist` exists before boot.
+
 ---
 
 This documentation should help you stand up the project quickly, understand the data flow, and adapt the stack for deployments or further development.

@@ -1,3 +1,7 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import compression from 'compression';
 import cors from 'cors';
 import express from 'express';
@@ -8,16 +12,21 @@ import adminRouter from './routes/adminRoutes.js';
 import radarRouter from './routes/radarRoutes.js';
 import { closeMongo, flushLogBuffer, getLogBufferSize, initMongo } from './services/mongoService.js';
 import {
-  hydrateCacheFromPersistence,
-  scheduleLatestArtifactRefresh,
-  warmLatestArtifact,
-  warmLatestArtifactInBackground,
+    hydrateCacheFromPersistence,
+    scheduleLatestArtifactRefresh,
+    warmLatestArtifact,
+    warmLatestArtifactInBackground,
 } from './services/radarService.js';
 import { createLogger } from './utils/logger.js';
 
 const app = express();
 const logger = createLogger('server', config.logLevel);
 const port = config.port;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontendDistPath = path.resolve(__dirname, '../../frontend/dist');
+const hasFrontendBundle = existsSync(frontendDistPath);
 
 app.use(cors());
 app.use(compression());
@@ -30,6 +39,27 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/admin', adminRouter);
 app.use('/api/radar', radarRouter);
+
+if (hasFrontendBundle) {
+  logger.info('Serving frontend bundle from dist directory', {
+    path: frontendDistPath,
+  });
+
+  app.use(express.static(frontendDistPath));
+
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+      next();
+      return;
+    }
+
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  });
+} else {
+  logger.info('Frontend bundle directory not found; API-only mode enabled', {
+    expectedPath: frontendDistPath,
+  });
+}
 
 app.use((err, _req, res, _next) => {
   const status = err.status || 500;
