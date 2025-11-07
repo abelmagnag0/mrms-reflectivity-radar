@@ -13,6 +13,7 @@ logs/
 .env
 .env.local
 .env.*
+!.env.example
 
 # Build artifacts
 dist/

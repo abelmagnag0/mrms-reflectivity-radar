@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_DB:-radar}
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: backend
+    restart: unless-stopped
+    environment:
+      PORT: ${PORT:-8080}
+      MONGO_URI: ${MONGO_URI:-mongodb://mongo:27017}
+      MONGO_DB: ${MONGO_DB:-radar}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      RADAR_WARMUP_ON_START: ${RADAR_WARMUP_ON_START:-true}
+      RADAR_REFRESH_INTERVAL_MS: ${RADAR_REFRESH_INTERVAL_MS:-60000}
+      CACHE_TTL_MS: ${CACHE_TTL_MS:-300000}
+      CACHE_PERSIST_DIR: ${CACHE_PERSIST_DIR:-}
+      PYTHON_EXECUTABLE: ${PYTHON_EXECUTABLE:-python3}
+      MRMS_S3_BUCKET: ${MRMS_S3_BUCKET:-noaa-mrms-pds}
+      MRMS_S3_REGION: ${MRMS_S3_REGION:-us-east-1}
+      MRMS_REGION: ${MRMS_REGION:-CONUS}
+      MRMS_PRODUCT: ${MRMS_PRODUCT:-ReflectivityAtLowestAltitude_00.50}
+      MRMS_MAX_DATA_AGE_MINUTES: ${MRMS_MAX_DATA_AGE_MINUTES:-20}
+    depends_on:
+      - mongo
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://backend:8080/api}
+    container_name: frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+
+volumes:
+  mongo-data:

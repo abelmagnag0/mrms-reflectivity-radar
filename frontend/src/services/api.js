@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+
 const client = axios.create({
-  baseURL: '/api',
-  timeout: 60000, // MRMS endpoints can be slow to respond on first load
+  baseURL: API_BASE,
+  timeout: 60000,
 });
 
 export async function fetchLatestRadar() {
